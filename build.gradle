@@ -1,0 +1,77 @@
+def artifactId = 'iframe'
+
+group 'com.nuonuo'
+version '1.0.1-r4'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+gradle.ext {
+    mavenUrl = "http://192.168.210.60:8081/nexus/content/repositories/nuonuo-releases"
+    mavenDevUrl = "http://192.168.210.60:8081/nexus/content/repositories/nuonuo-snapshots"
+//    mavenUserName = "nn_snapshot"
+//    mavenPwd = "nuonuo@123"
+
+    mavenUserName = "admin"
+    mavenPwd = "www@hello567"
+
+    vendor = "aisino"
+
+    // 开发版本为true，提交到maven快照仓库；
+    // 正式发布设置为true，提交到maven发布；
+    // 提交命令：gradle upload
+    isSnapshot = false
+}
+
+repositories {
+    maven {
+        url "http://192.168.210.60:8081/nexus/content/groups/public"
+    }
+
+    mavenCentral()
+}
+
+dependencies {
+    compile(
+            'com.xiaoleilu:hutool:2.15.11',
+            'io.netty:netty-all:4.1.5.Final',
+            'org.apache.logging.log4j:log4j-api:2.5',
+            'org.apache.logging.log4j:log4j-core:2.5',
+            'com.alibaba:fastjson:1.2.11',
+            'commons-collections:commons-collections:3.2.1',
+            'commons-codec:commons-codec:1.10',
+    )
+
+    testCompile  (
+            group: 'junit', name: 'junit', version: '4.12',
+            'org.apache.httpcomponents:httpclient:4.5.2'
+    )
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            snapshotRepository(url: gradle.mavenDevUrl) {
+                authentication(userName: gradle.mavenUserName, password: gradle.mavenPwd)
+            }
+            repository(url: gradle.mavenUrl) {
+                authentication(userName: gradle.mavenUserName, password: gradle.mavenPwd)
+            }
+
+            if (gradle.isSnapshot) {
+                pom.version = "$project.version-SNAPSHOT"
+            } else {
+                pom.version = "$project.version"
+            }
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
